@@ -1,0 +1,129 @@
+    
+    AUS R2100.h
+    
+    
+    
+    
+    
+       //*** ****Funktion: Hinderniserkennung**** ***//
+    //*   Es werden Hindernisse auch über mehrere Echos zusammenhängend erkannt
+    //*
+    //*
+
+    /* Anzahl der Hindernisse */
+    uint8_t ObstacleNum = 0;      
+    /* Distanz und Winkel Wert des Hindernisses
+     * [11]: Für das jeweilige Echo
+     * [5]:
+     *    [0]: Distanz - Start
+     *    [1]: Winkel  - Start
+     *    [2]: Distanz - Ende
+     *    [3]: Winkel  - Ende
+     *    [4]:  1: Hindernis umfasst nur ein Echo 
+     *          2: Hindernis umfasst mehere Echos
+     */
+    uint8_t ObstacleValue[11][5]; 
+
+    uint8_t ObstacleRecognition(uint8_t RelevanceDistance[11]) {
+      bool    ObstacleNew = true; /* Neues Hindernis erkannt */      
+      ObstacleNum = 0;
+      
+      for (uint8_t Echo = 0; Echo < 11; Echo ++) {
+        /*** Abfrage: Liegt der Distanzwert im relevanten Bereich ***/
+        if (Distance[Echo] <= RelevanceDistance[Echo]) {
+          /** Erstellen eines Hindernisses **/
+          if (ObstacleNew == true) {
+            /* Hindernisanfang */
+            ObstacleValue[ObstacleNum][0] = Distance[Echo];
+            ObstacleValue[ObstacleNum][1] = Angle[Echo];
+            ObstacleValue[ObstacleNum][4] = 1;
+            ObstacleNew = false;
+          }
+          /* Es gibt bereits ein Hindernisanfang */
+          else if (ObstacleNew == false) {
+            /* Hindernisende */
+            ObstacleValue[ObstacleNum][2] = Distance[Echo];
+            ObstacleValue[ObstacleNum][3] = Angle[Echo];
+            ObstacleValue[ObstacleNum][4] = 2;
+          }
+        }
+        /*** Es wurde kein Hindernis erkannt ***/
+        else if(ObstacleNew == false) {
+          ObstacleNum ++; /* Hindernisanzahl */
+          ObstacleNew = true;
+        }
+      }
+
+      /* Definieren der Rückgabewerte */
+      if (ObstacleNum == 0 and ObstacleNew == true) {
+        /* Wenn keine Hindernisse erkannt */
+        return 0;
+      } else {
+        /* Wenn mindestens ein Hindernis erkannt */
+        if(ObstacleNew == false){
+          ObstacleNum++;
+        }
+        return 1;
+      }
+    }
+    //*** ************************************ ***//
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       AUS MAIN.CPP
+              
+       
+        //***** Hindernis 2D-Betrachtung *****//
+          if (R2100.ObstacleRecognition(System.RelevanceDistance) == 1) {
+            // Es wurden Hindernisse erkannt 
+            System.SendValue[0] = R2100.ObstacleNum;
+            System.SendValueCounter = 1;
+            /* Vorbereitung der Datenübertragung
+            * - Strukturieren der Daten zu geeigneten Paketen
+            * 
+            */
+            for (uint8_t Obstacle = 0; Obstacle < R2100.ObstacleNum; Obstacle++) {
+              if (R2100.ObstacleValue[Obstacle][4] == 1) {
+                System.SendValue[System.SendValueCounter] = R2100.ObstacleValue[Obstacle][4];
+                System.SendValueCounter++;
+                System.SendValue[System.SendValueCounter] = R2100.ObstacleValue[Obstacle][0];
+                System.SendValueCounter++;
+                System.SendValue[System.SendValueCounter] = R2100.ObstacleValue[Obstacle][1];
+                System.SendValueCounter++;
+              } else if (R2100.ObstacleValue[Obstacle][4] == 2) {
+                System.SendValue[System.SendValueCounter] = R2100.ObstacleValue[Obstacle][4];
+                System.SendValueCounter++;
+                System.SendValue[System.SendValueCounter] = R2100.ObstacleValue[Obstacle][0];
+                System.SendValueCounter++;
+                System.SendValue[System.SendValueCounter] = R2100.ObstacleValue[Obstacle][1];
+                System.SendValueCounter++;
+                System.SendValue[System.SendValueCounter] = R2100.ObstacleValue[Obstacle][2];
+                System.SendValueCounter++;
+                System.SendValue[System.SendValueCounter] = R2100.ObstacleValue[Obstacle][3];
+                System.SendValueCounter++;
+              }
+            }
+            System.SendValue[System.SendValueCounter] = R2100.NearestDistance(250);
+          } 
+          else {
+            // Es wurden keine Hinfernisse erkannt
+            System.SendValue[0] = R2100.NearestDistance(250);
+          }

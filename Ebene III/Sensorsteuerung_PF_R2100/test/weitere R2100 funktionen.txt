@@ -1,0 +1,37 @@
+    //*** ****Funktion: Naheligenstes Objekt**** ***//
+    //*   Abfrage die Entfernung des nahliegensten Hindernisses
+    //*
+    //*   Eingabe-Werte:  - nearField; Nahbereich in cm 
+    //*   Rückgabe-Werte: - Near; Entfernung in %
+    uint8_t NearestDistance(uint16_t nearField) {
+      uint16_t Near = nearField;
+      for (uint8_t Echo = 0; Echo < 11; Echo ++) {
+        Near = min(Distance[Echo], Near);
+      }
+      return changeRange(Near, 0, nearField, 0, 100) ;
+    }
+    //*** ************************************ ***//
+
+
+
+
+
+
+
+        //*****               DATENAUSWERTUNG ALT                      *****//
+
+    //*** ****Funktion: Nahbereichsabfrage**** ***//
+    //*  Eingabe-Werte:  - near_field : Distanz ab welcher der Nahbereich beginnt
+    //*                  - Echos[11] : Distanz-Werte der Echos
+    //*  Rückgabe-Werte: - object_inside_near_field
+    bool nearField(uint8_t near_field) {
+      bool object_inside_near_field = false; /* Merker für Objekt im Nahbereich */
+      for (uint8_t Echo = 0; Echo < 11; Echo ++) {
+        /*Prüfung ob ein Hindernis von einem der Echos im Nahfeldbereich erkannt wird*/
+        if (Distance[Echo] <= near_field) {
+          object_inside_near_field = true;
+        }
+      }
+      return object_inside_near_field;
+    }
+    //*** ************************************ ***//  
