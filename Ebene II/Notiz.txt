@@ -1,0 +1,2 @@
+-LED Flackern im automatik Modus
+-normierter Wert für rechts nicht ganz korrekt
